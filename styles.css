@@ -202,6 +202,24 @@ button {
   font-size: 12px;
 }
 
+.section-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: -5px 0 12px;
+  color: var(--ink-500);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.section-note svg {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.3;
+}
+
 .left-panel .ghost-icon,
 .right-panel .ghost-icon {
   color: var(--ink-500);
