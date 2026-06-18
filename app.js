@@ -3,7 +3,7 @@ const API_PROXY = "/api/messages";
 const SERVICE_KEY = "79TC865LX2RE904U";
 const PAGE_SIZE = 100;
 const MAX_GEOCODE_PER_PAGE = 8;
-const MAX_RANGE_DAYS = 31;
+const MAX_RANGE_DAYS = 7;
 const DEFAULT_MAP_CENTER = [36.35, 127.85];
 const DEFAULT_MAP_ZOOM = 7;
 
@@ -357,20 +357,10 @@ function bindEvents() {
     button.addEventListener("click", () => {
       document.querySelectorAll(".range-button").forEach((item) => item.classList.remove("is-active"));
       button.classList.add("is-active");
-      const preset = button.dataset.preset || "";
+      const days = Number(button.dataset.days);
       const endDate = new Date();
       const startDate = new Date(endDate);
-
-      if (preset === "yesterday") {
-        startDate.setDate(startDate.getDate() - 1);
-        endDate.setDate(endDate.getDate() - 1);
-      } else if (preset === "this-month") {
-        startDate.setDate(1);
-      } else {
-        const days = Number(button.dataset.days);
-        startDate.setDate(startDate.getDate() - Math.max(0, days - 1));
-      }
-
+      startDate.setDate(startDate.getDate() - Math.max(0, days - 1));
       setDateRange(startDate, endDate);
     });
   });
@@ -1314,12 +1304,12 @@ function enforceDateRange({ silent = false } = {}) {
 
   const rangeDays = Math.floor((stripTime(end) - stripTime(start)) / 86400000) + 1;
   if (rangeDays > MAX_RANGE_DAYS) {
-      start = new Date(end);
-      start.setDate(start.getDate() - (MAX_RANGE_DAYS - 1));
-      if (!silent) {
-      showToast("최대 31일까지만 조회할 수 있어 시작일을 자동 조정했습니다.");
-      }
+    start = new Date(end);
+    start.setDate(start.getDate() - (MAX_RANGE_DAYS - 1));
+    if (!silent) {
+      showToast("최대 7일까지만 조회할 수 있어 시작일을 자동 조정했습니다.");
     }
+  }
 
   els.startDateInput.value = toInputDate(start);
   els.endDateInput.value = toInputDate(end);
