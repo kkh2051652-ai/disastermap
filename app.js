@@ -357,10 +357,18 @@ function bindEvents() {
     button.addEventListener("click", () => {
       document.querySelectorAll(".range-button").forEach((item) => item.classList.remove("is-active"));
       button.classList.add("is-active");
-      const days = Number(button.dataset.days);
+      const preset = button.dataset.preset || "";
       const endDate = new Date();
       const startDate = new Date(endDate);
-      startDate.setDate(startDate.getDate() - Math.max(0, days - 1));
+
+      if (preset === "yesterday") {
+        startDate.setDate(startDate.getDate() - 1);
+        endDate.setDate(endDate.getDate() - 1);
+      } else {
+        const days = Number(button.dataset.days);
+        startDate.setDate(startDate.getDate() - Math.max(0, days - 1));
+      }
+
       setDateRange(startDate, endDate);
     });
   });
