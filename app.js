@@ -38,7 +38,7 @@ const DISASTER_TYPES = [
   { key: "폭염", label: "폭염", icon: "thermometer-sun", color: "#f38b21", aliases: ["고온"] },
   { key: "풍랑", label: "풍랑", icon: "waves", color: "#0891b2", aliases: [] },
   { key: "한파", label: "한파", icon: "snowflake", color: "#168fca", aliases: [] },
-  { key: "호우", label: "호우", icon: "cloud-rain", color: "#2f76e8", aliases: ["강우"] },
+  { key: "호우", label: "호우", icon: "cloud-rain", color: "#2f76e8", aliases: ["강우", "강한 비", "heavy rain"] },
   { key: "홍수", label: "홍수", icon: "waves", color: "#1d4ed8", aliases: [] },
   { key: "화재", label: "화재", icon: "flame", color: "#e64943", aliases: [] },
   { key: "환경오염사고", label: "환경오염사고", icon: "biohazard", color: "#16a34a", aliases: ["환경오염사고"] },
@@ -48,7 +48,7 @@ const DISASTER_TYPES = [
 const SEVERITY_LEGEND = [
   { label: "안전", className: "is-advisory", color: "#94a3b8" },
   { label: "긴급", className: "is-urgent", color: "#f59e0b" },
-  { label: "위급", className: "is-critical", color: "#e11d48" },
+  { label: "위급", className: "is-critical", color: "#eab308" },
 ];
 
 const REGION_POINTS = [
@@ -119,6 +119,7 @@ const KNOWN_LOCAL_POINTS = [
   { key: "경북 고령군", label: "고령군", names: ["경상북도 고령군", "경북 고령군"], lat: 35.7262, lng: 128.2629, zoom: 12 },
   { key: "경북 포항시", label: "포항시", names: ["경상북도 포항시", "경북 포항시"], lat: 36.019, lng: 129.3435, zoom: 12 },
   { key: "경북 울진군", label: "울진군", names: ["경상북도 울진군", "경북 울진군"], lat: 36.9931, lng: 129.4006, zoom: 12 },
+  { key: "경북 울릉군", label: "울릉군", names: ["경상북도 울릉군", "경북 울릉군", "울릉군", "울릉도"], lat: 37.4844, lng: 130.9057, zoom: 11 },
   { key: "경기 김포시", label: "김포시", names: ["경기도 김포시", "경기 김포시"], lat: 37.6153, lng: 126.7156, zoom: 12 },
   { key: "경기 안양시", label: "안양시", names: ["경기도 안양시", "경기 안양시"], lat: 37.3943, lng: 126.9568, zoom: 12 },
   { key: "경기 군포시", label: "군포시", names: ["경기도 군포시", "경기 군포시"], lat: 37.3616, lng: 126.9352, zoom: 12 },
@@ -577,6 +578,8 @@ function normalizeItems(items) {
   return items.map((item, index) => {
     const id = item.SN != null ? String(item.SN) : `${item.CRT_DT || "NO_DATE"}-${index}`;
     const type = resolveType(item.DST_SE_NM || item.MSG_CN || "");
+    const severity = markerSeverity(item.EMRG_STEP_NM || "");
+    const disaster = item.DST_SE_NM || type.label;
     const regionRefs = extractRegionRefs(item.RCPTN_RGN_NM || "");
     const points = resolvePointsFromRefs(regionRefs, item.RCPTN_RGN_NM || "");
     const dateKey = parseDateKey(item.CRT_DT || item.REG_YMD);
@@ -587,9 +590,10 @@ function normalizeItems(items) {
       message: item.MSG_CN || "",
       region: item.RCPTN_RGN_NM || "지역 미상",
       step: item.EMRG_STEP_NM || "안내",
-      disaster: item.DST_SE_NM || "기타",
+      disaster,
       regDate: item.REG_YMD || "-",
       type,
+      severity,
       regionRefs,
       points,
       point: points[0] || null,
@@ -845,7 +849,7 @@ function renderMarkers() {
             <span>${escapeHtml(group.region)}</span>
             <span class="popup-count">${formatNumber(group.items.length)}건</span>
           </div>
-          <span class="popup-step ${markerSeverity.className}" style="--severity-color:${markerSeverity.color}">${escapeHtml(markerSeverity.label)}</span>
+          ${renderSeverityTag(markerSeverity.label, markerSeverity, "popup-step", `--severity-color:${markerSeverity.color}`)}
           ${markerMix.isMixed ? `<div class="popup-types">${markerMix.types.map((type) => `<span style="--type-color:${type.color}">${escapeHtml(type.label)}</span>`).join("")}</div>` : ""}
           ${latestItem ? `
             <div class="popup-latest">
@@ -885,12 +889,12 @@ function renderList() {
   els.messageList.innerHTML = visibleItems
     .map(
       (item) => `
-        <button class="message-card ${state.selectedItem?.id === item.id ? "is-selected" : ""}" type="button" data-id="${escapeHtml(item.id)}" style="--accent:${item.type.color}" aria-pressed="${state.selectedItem?.id === item.id ? "true" : "false"}">
+        <button class="message-card ${state.selectedItem?.id === item.id ? "is-selected" : ""} ${item.severity?.badge ? "is-alert" : ""}" type="button" data-id="${escapeHtml(item.id)}" style="--accent:${item.severity?.badge ? item.severity.color : item.type.color}" aria-pressed="${state.selectedItem?.id === item.id ? "true" : "false"}">
           <span class="message-icon"><i data-lucide="${item.type.icon}"></i></span>
           <span class="message-body">
             <span class="message-topline">
               <span class="message-title">${escapeHtml(item.disaster || item.type.label)}</span>
-              <span class="step-badge">${escapeHtml(item.step)}</span>
+              ${renderSeverityTag(item.step, item.severity, "step-badge")}
             </span>
             <span class="message-time">${escapeHtml(item.createdAt)}</span>
             <span class="message-region">${escapeHtml(item.region)}</span>
@@ -937,8 +941,9 @@ function renderDetail() {
     return;
   }
 
+  const accent = item.severity?.badge ? item.severity.color : item.type.color;
   els.detailContent.innerHTML = `
-    <span class="detail-alert" style="--accent:${item.type.color}">${escapeHtml(item.step)}</span>
+    ${renderSeverityTag(item.step, item.severity, "detail-alert", `--accent:${accent}`)}
     <h3 class="detail-title">${escapeHtml(item.disaster || item.type.label)} 안내</h3>
     <dl class="detail-table">
       <div class="detail-row">
@@ -1069,12 +1074,18 @@ function topSeverity(items) {
 function markerSeverity(step) {
   const value = String(step || "");
   if (value.includes("위급")) {
-    return { key: "critical", label: "위급재난", className: "is-critical", color: "#e11d48", badge: true };
+    return { key: "critical", label: "위급재난", className: "is-critical", color: "#eab308", badge: true };
   }
   if (value.includes("긴급")) {
     return { key: "urgent", label: "긴급재난", className: "is-urgent", color: "#f59e0b", badge: true };
   }
   return { key: "advisory", label: value || "안전안내", className: "is-advisory", color: "#94a3b8", badge: false };
+}
+
+function renderSeverityTag(label, severity, className, style = "") {
+  const alertClass = severity?.badge ? " is-alert" : "";
+  const styleAttr = style ? ` style="${style}"` : "";
+  return `<span class="${className}${alertClass}"${styleAttr}>${escapeHtml(label)}</span>`;
 }
 
 function countByType(items) {
@@ -1093,7 +1104,7 @@ function resolveType(value) {
   );
   if (exactType) return exactType;
 
-  const keyMatches = DISASTER_TYPES.filter((type) => normalized.includes(normalizeTypeText(type.key))).sort(
+  const keyMatches = DISASTER_TYPES.filter((type) => matchesTypeKey(normalized, type.key)).sort(
     (a, b) => normalizeTypeText(b.key).length - normalizeTypeText(a.key).length,
   );
   if (keyMatches.length) return keyMatches[0];
@@ -1113,6 +1124,15 @@ function resolveType(value) {
 
 function normalizeTypeText(value) {
   return String(value || "").replace(/\s/g, "").toLowerCase();
+}
+
+function matchesTypeKey(normalized, key) {
+  const normalizedKey = normalizeTypeText(key);
+  if (!normalizedKey) return false;
+  if (/^[a-z0-9]+$/.test(normalizedKey)) {
+    return new RegExp(`(^|[^a-z0-9])${escapeRegExp(normalizedKey)}([^a-z0-9]|$)`).test(normalized);
+  }
+  return normalized.includes(normalizedKey);
 }
 
 function extractRegionRefs(regionName) {

@@ -695,6 +695,7 @@ button {
   height: 11px;
   border-radius: 3px;
   clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%);
+  box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.22);
 }
 
 .status-toast {
@@ -747,7 +748,7 @@ button {
   position: absolute;
   width: 54px;
   height: 54px;
-  border: 2px solid rgba(225, 29, 72, 0.55);
+  border: 2px solid rgba(234, 179, 8, 0.55);
   border-radius: 18px;
   transform: rotate(22.5deg);
   animation: criticalPulse 1.45s ease-out infinite;
@@ -851,18 +852,18 @@ button {
 
 .marker-alert {
   position: absolute;
-  right: -6px;
-  top: -7px;
+  right: -5px;
+  top: -6px;
   z-index: 3;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   display: grid;
   place-items: center;
   border: 2px solid #ffffff;
   border-radius: 999px;
   background: var(--severity-color);
-  color: #ffffff;
-  font-size: 12px;
+  color: #1f2937;
+  font-size: 13px;
   font-weight: 950;
   line-height: 1;
   box-shadow: 0 6px 14px rgba(24, 39, 60, 0.2);
@@ -906,14 +907,15 @@ button {
 }
 
 .cluster-marker.is-critical {
-  border-color: #fff1f2;
+  border-color: #fff6cc;
   border-radius: 14px;
   clip-path: polygon(30% 0, 70% 0, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0 70%, 0 30%);
   box-shadow:
-    0 14px 28px rgba(127, 29, 29, 0.28),
-    0 0 0 4px rgba(225, 29, 72, 0.34);
+    0 14px 28px rgba(127, 92, 10, 0.24),
+    0 0 0 4px rgba(234, 179, 8, 0.34);
 }
 
+.cluster-marker-shell.is-urgent .marker-alert,
 .cluster-marker-shell.is-critical .marker-alert {
   right: -4px;
   top: -5px;
@@ -964,6 +966,7 @@ button {
 .popup-step {
   display: inline-flex;
   align-items: center;
+  gap: 5px;
   min-height: 24px;
   margin-bottom: 9px;
   padding: 0 8px;
@@ -1088,10 +1091,23 @@ button {
   cursor: pointer;
 }
 
+.message-card.is-alert {
+  border-color: color-mix(in srgb, var(--accent) 52%, #ffffff);
+  background: color-mix(in srgb, var(--accent) 16%, #ffffff);
+  box-shadow:
+    0 6px 18px rgba(28, 45, 70, 0.06),
+    0 0 0 1px color-mix(in srgb, var(--accent) 12%, #ffffff) inset;
+}
+
 .message-card:hover,
 .message-card.is-selected {
   border-color: color-mix(in srgb, var(--accent) 48%, #ffffff);
   background: color-mix(in srgb, var(--accent) 7%, #ffffff);
+}
+
+.message-card.is-alert:hover,
+.message-card.is-alert.is-selected {
+  background: color-mix(in srgb, var(--accent) 20%, #ffffff);
 }
 
 .message-card.is-selected {
@@ -1139,7 +1155,10 @@ button {
 
 .step-badge {
   flex: 0 0 auto;
-  max-width: 78px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 104px;
   padding: 3px 7px;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--accent) 38%, #ffffff);
@@ -1150,6 +1169,31 @@ button {
   text-overflow: ellipsis;
   white-space: nowrap;
   background: color-mix(in srgb, var(--accent) 7%, #ffffff);
+}
+
+.step-badge.is-alert,
+.detail-alert.is-alert,
+.popup-step.is-alert {
+  color: #7c4a00;
+  border-color: #f59e0b;
+  background: #fef3c7;
+}
+
+.step-badge.is-alert::before,
+.detail-alert.is-alert::before,
+.popup-step.is-alert::before {
+  content: "!";
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: #f59e0b;
+  color: #1f2937;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .message-time,
@@ -1213,6 +1257,7 @@ button {
   display: inline-flex;
   justify-self: start;
   align-items: center;
+  gap: 5px;
   min-height: 26px;
   padding: 0 9px;
   border: 1px solid color-mix(in srgb, var(--accent) 38%, #ffffff);
